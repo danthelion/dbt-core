@@ -51,6 +51,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Print Status
+        run: echo "Skip Changelog label exists"
+
   changelog_file_check:
     name: changelog_file_check
     # only want to run this job if skip_changelog_label_missing ran, which will only happen if the label is missing
