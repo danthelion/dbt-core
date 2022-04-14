@@ -136,12 +136,12 @@ jobs:
       with:
         branch: ${{ github.event.pull_request.head.ref }}
         # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
-        author: "Github Build Bot <buildbot@fishtownanalytics.com>"
+        author: "Emily Rockman <emily.rockman@dbtlabs.com>"
         commit-message: "Add automated changelog yaml from template"
 
   second_changelog_file_check:
   # since the previous job may or may not have created the changelog file, we need to check one more time for the file before we decide to write a comment to add a changelog entry
-    name: changelog_file_check
+    name: second_changelog_file_check
     needs: skip_changelog_label_missing
     outputs:
       changelog_exists: ${{ steps.set_var.outputs.file_exists }}
