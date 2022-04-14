@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Print Status
-        run: echo "Skip Changelog label exists"
+        run: echo "Skip Changelog label does not exist on PR"
 
   changelog_file_check:
     name: changelog_file_check
@@ -136,7 +136,7 @@ jobs:
       with:
         branch: ${{ github.event.pull_request.head.ref }}
         # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
-        author: "Emily Rockman <emily.rockman@dbtlabs.com>"
+        author: "Github Build Bot <buildbot@fishtownanalytics.com>"
         commit-message: "Add automated changelog yaml from template"
 
   second_changelog_file_check:
