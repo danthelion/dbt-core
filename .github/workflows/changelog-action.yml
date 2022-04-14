@@ -46,8 +46,7 @@ jobs:
   skip_changelog_label_missing:
     name: skip_changelog_label_missing
     outputs:
-      skip_changelog_label: ${{ steps.step1.outputs.test }}
-      changelog_exists: ${{ steps.filter.outputs.changelog }}  # will be 'True' or 'False'
+      changelog_exists: ${{ steps.set_var.outputs.file_exists }}  # will be 'True' or 'False'
     if: "!contains(github.event.pull_request.labels.*.name, 'Skip Changelog')"
 
     runs-on: ubuntu-latest
@@ -75,7 +74,9 @@ jobs:
           filters: |
             changelog:
               - added: '.changes/unreleased/**.yaml'
-        run: echo "::set-output name=file_exists::changelog"
+      - name: Set file variable
+        id: set_var
+        run: echo "::set-output name=file_exists::${{ steps.filter.outputs.changelog }}"
 
   dependency_changelog:
     needs: changelog_file_check
@@ -107,7 +108,6 @@ jobs:
         echo "::set-output name=FILEPATH::$FILEPATH"
 
     - name: Checkout Branch
-      if: steps.filter.outputs.changelog == 'false'
       uses: actions/checkout@v2
       with:
         # persist-credentials: false is crucial otherwise Git push is performed with
@@ -116,7 +116,6 @@ jobs:
         persist-credentials: false
 
     - name: Create file from template
-      if: steps.filter.outputs.changelog == 'false'
       run: |
         echo kind: Dependencies > "${{ steps.fp.outputs.FILEPATH }}"
         echo body: ${{ github.event.pull_request.title }} >> "${{ steps.fp.outputs.FILEPATH }}"
@@ -127,7 +126,6 @@ jobs:
         echo "  PR: ${{ github.event.pull_request.number }}" >> "${{ steps.fp.outputs.FILEPATH }}"
 
     - name: Commit Changelog File
-      if: steps.filter.outputs.changelog == 'false'
       uses: gr2m/create-or-update-pull-request-action@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -142,7 +140,7 @@ jobs:
     name: changelog_file_check
     needs: skip_changelog_label_missing
     outputs:
-      changelog_exists: ${{ steps.filter.outputs.changelog }}  # will be 'True' or 'False'
+      changelog_exists: ${{ steps.set_var.outputs.file_exists }}
 
     runs-on: ubuntu-latest
     steps:
@@ -160,7 +158,8 @@ jobs:
           filters: |
             changelog:
               - added: '.changes/unreleased/**.yaml'
-        run: echo "::set-output name=file_exists::changelog"
+      - name: Set file variable
+        run: echo "::set-output name=file_exists::${{ steps.filter.outputs.changelog }}"
 
   add_changelog_comment:
     name: add_changelog_comment
@@ -181,16 +180,12 @@ jobs:
           body-includes: ${{ env.changelog_comment }}
 
       - name: Create PR comment if changelog entry is missing, required, and does not exist
-        if: |
-          steps.filter.outputs.changelog == 'false' &&
-          steps.changelog_comment.outputs.comment-body == ''
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ env.changelog_comment }}
 
       - name: Fail job if changelog entry is missing and required
-        if: steps.filter.outputs.changelog == 'false'
         uses: actions/github-script@v6
         with:
           script: core.setFailed('Changelog entry required to merge.')
