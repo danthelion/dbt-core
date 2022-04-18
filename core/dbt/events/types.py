@@ -587,6 +587,7 @@ class SQLQueryStatus(DebugLevel):
     code: str = "E017"
 
     def message(self) -> str:
+
         return f"SQL status: {self.status} in {self.elapsed} seconds"
 
 

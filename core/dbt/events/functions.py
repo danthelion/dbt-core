@@ -265,6 +265,22 @@ def send_exc_to_logger(
         )
 
 
+from time import perf_counter
+
+class catchtime:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self):
+        self.time = perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.time = perf_counter() - self.time
+        self.readout = f'{self.name} - Time: {self.time:.3f} seconds'
+        print(self.readout)
+
+
 # top-level method for accessing the new eventing system
 # this is where all the side effects happen branched by event type
 # (i.e. - mutating the event history, printing to stdout, logging

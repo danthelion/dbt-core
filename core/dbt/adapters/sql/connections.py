@@ -8,7 +8,7 @@ import dbt.clients.agate_helper
 import dbt.exceptions
 from dbt.adapters.base import BaseConnectionManager
 from dbt.contracts.connection import Connection, ConnectionState, AdapterResponse
-from dbt.events.functions import fire_event
+from dbt.events.functions import fire_event, catchtime
 from dbt.events.types import ConnectionUsed, SQLQuery, SQLCommit, SQLQueryStatus
 
 
@@ -52,6 +52,7 @@ class SQLConnectionManager(BaseConnectionManager):
         bindings: Optional[Any] = None,
         abridge_sql_log: bool = False,
     ) -> Tuple[Connection, Any]:
+        print(f'BENCHMARK LOG - Query: {sql[:512]}')
         connection = self.get_thread_connection()
         if auto_begin and connection.transaction_open is False:
             self.begin()
@@ -67,13 +68,17 @@ class SQLConnectionManager(BaseConnectionManager):
             pre = time.time()
 
             cursor = connection.handle.cursor()
-            cursor.execute(sql, bindings)
+            with catchtime("BENCHMARK LOG - Executing Query"):
+                cursor.execute(sql, bindings)
 
+            total_time = round((time.time() - pre), 2)
             fire_event(
                 SQLQueryStatus(
-                    status=str(self.get_response(cursor)), elapsed=round((time.time() - pre), 2)
+                    status=str(self.get_response(cursor)), elapsed=total_time
                 )
             )
+
+            print(f'BENCHMARK LOG - Total (SQL Status) - Time {total_time} seconds')
 
             return connection, cursor
 
