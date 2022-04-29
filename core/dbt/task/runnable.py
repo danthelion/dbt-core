@@ -26,7 +26,7 @@ from dbt.logger import (
     ModelMetadata,
     NodeCount,
 )
-from dbt.events.functions import fire_event
+from dbt.events.functions import fire_event, catchtime
 from dbt.events.types import (
     EmptyLine,
     PrintCancelLine,
@@ -433,7 +433,9 @@ class GraphRunnableTask(ManifestTask):
             res = self.execute_nodes()
             self.after_run(adapter, res)
             elapsed = time.time() - started
-            print(f'BENCHMARK LOG - Execute with hooks (final dbt message) - Time: {elapsed} seconds')
+            print(
+                f"BENCHMARK LOG - Execute with hooks (final dbt message) - Time: {elapsed} seconds"
+            )
             self.after_hooks(adapter, res, elapsed)
 
         finally:

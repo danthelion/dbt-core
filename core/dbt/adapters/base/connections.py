@@ -4,6 +4,7 @@ import os
 # multiprocessing.RLock is a function returning this type
 from multiprocessing.synchronize import RLock
 from threading import get_ident
+from time import perf_counter
 from typing import Dict, Tuple, Hashable, Optional, ContextManager, List
 
 import agate
@@ -33,6 +34,20 @@ from dbt.events.types import (
     RollbackFailed,
 )
 from dbt import flags
+
+
+class catchtime:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self):
+        self.time = perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.time = perf_counter() - self.time
+        self.readout = f"BENCHMARK LOG (core) - {self.name} - Time: {self.time:.3f} seconds"
+        print(self.readout)
 
 
 class BaseConnectionManager(metaclass=abc.ABCMeta):
@@ -136,15 +151,16 @@ class BaseConnectionManager(metaclass=abc.ABCMeta):
 
         conn = self.get_if_exists()
         if conn is None:
-            conn = Connection(
-                type=Identifier(self.TYPE),
-                name=None,
-                state=ConnectionState.INIT,
-                transaction_open=False,
-                handle=None,
-                credentials=self.profile.credentials,
-            )
-            self.set_thread_connection(conn)
+            with catchtime("Setting new connection in thread"):
+                conn = Connection(
+                    type=Identifier(self.TYPE),
+                    name=None,
+                    state=ConnectionState.INIT,
+                    transaction_open=False,
+                    handle=None,
+                    credentials=self.profile.credentials,
+                )
+                self.set_thread_connection(conn)
 
         if conn.name == conn_name and conn.state == "open":
             return conn
@@ -280,7 +296,7 @@ class BaseConnectionManager(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def execute(
-        self, sql: str, auto_begin: bool = False, fetch: bool = False
+            self, sql: str, auto_begin: bool = False, fetch: bool = False
     ) -> Tuple[AdapterResponse, agate.Table]:
         """Execute the given SQL.
 

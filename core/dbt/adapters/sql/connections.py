@@ -52,7 +52,7 @@ class SQLConnectionManager(BaseConnectionManager):
         bindings: Optional[Any] = None,
         abridge_sql_log: bool = False,
     ) -> Tuple[Connection, Any]:
-        print(f'BENCHMARK LOG - Query: {sql[:512]}')
+        print(f"BENCHMARK LOG - Query: {sql[:512]}")
         connection = self.get_thread_connection()
         if auto_begin and connection.transaction_open is False:
             self.begin()
@@ -68,17 +68,14 @@ class SQLConnectionManager(BaseConnectionManager):
             pre = time.time()
 
             cursor = connection.handle.cursor()
-            with catchtime("BENCHMARK LOG - Executing Query"):
+            with catchtime("Executing Query"):
                 cursor.execute(sql, bindings)
 
             total_time = round((time.time() - pre), 2)
-            fire_event(
-                SQLQueryStatus(
-                    status=str(self.get_response(cursor)), elapsed=total_time
-                )
-            )
+            with catchtime("Getting Response Fire Event"):
+                fire_event(SQLQueryStatus(status=str(self.get_response(cursor)), elapsed=total_time))
 
-            print(f'BENCHMARK LOG - Total (SQL Status) - Time {total_time} seconds')
+            print(f"BENCHMARK LOG - Total (SQL Status) - Time {total_time} seconds")
 
             return connection, cursor
 

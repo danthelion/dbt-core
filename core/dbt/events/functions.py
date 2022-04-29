@@ -5,6 +5,8 @@ from dbt.events.base_types import NoStdOut, Event, NoFile, ShowException, Cache
 from dbt.events.types import EventBufferFull, T_Event, MainReportVersion, EmptyLine
 import dbt.flags as flags
 
+from time import perf_counter
+
 # TODO this will need to move eventually
 from dbt.logger import SECRET_ENV_PREFIX, make_log_dir_if_missing, GLOBAL_LOGGER
 from datetime import datetime
@@ -265,7 +267,6 @@ def send_exc_to_logger(
         )
 
 
-from time import perf_counter
 
 class catchtime:
     def __init__(self, name: str):
@@ -277,7 +278,7 @@ class catchtime:
 
     def __exit__(self, type, value, traceback):
         self.time = perf_counter() - self.time
-        self.readout = f'{self.name} - Time: {self.time:.3f} seconds'
+        self.readout = f"BENCHMARK LOG (core) - {self.name} - Time: {self.time:.3f} seconds"
         print(self.readout)
 
 

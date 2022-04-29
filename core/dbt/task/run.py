@@ -28,7 +28,7 @@ from dbt.exceptions import (
     RuntimeException,
     missing_materialization,
 )
-from dbt.events.functions import fire_event, get_invocation_id
+from dbt.events.functions import fire_event, get_invocation_id, catchtime
 from dbt.events.types import (
     DatabaseErrorRunning,
     EmptyLine,
@@ -437,8 +437,10 @@ class RunTask(CompileTask):
     def before_run(self, adapter, selected_uids: AbstractSet[str]):
         with adapter.connection_named("master"):
             required_schemas = self.get_model_schemas(adapter, selected_uids)
-            self.create_schemas(adapter, required_schemas)
-            self.populate_adapter_cache(adapter, required_schemas)
+            with catchtime("create schemas"):
+                self.create_schemas(adapter, required_schemas)
+            with catchtime("populate adapter cache"):
+                self.populate_adapter_cache(adapter, required_schemas)
             self.defer_to_manifest(adapter, selected_uids)
             self.safe_run_hooks(adapter, RunHookType.Start, {})
 
