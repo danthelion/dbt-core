@@ -267,7 +267,6 @@ def send_exc_to_logger(
         )
 
 
-
 class catchtime:
     def __init__(self, name: str):
         self.name = name

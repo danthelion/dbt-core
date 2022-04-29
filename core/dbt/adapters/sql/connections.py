@@ -73,7 +73,9 @@ class SQLConnectionManager(BaseConnectionManager):
 
             total_time = round((time.time() - pre), 2)
             with catchtime("Getting Response Fire Event"):
-                fire_event(SQLQueryStatus(status=str(self.get_response(cursor)), elapsed=total_time))
+                fire_event(
+                    SQLQueryStatus(status=str(self.get_response(cursor)), elapsed=total_time)
+                )
 
             print(f"BENCHMARK LOG - Total (SQL Status) - Time {total_time} seconds")
 

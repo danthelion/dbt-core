@@ -296,7 +296,7 @@ class BaseConnectionManager(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def execute(
-            self, sql: str, auto_begin: bool = False, fetch: bool = False
+        self, sql: str, auto_begin: bool = False, fetch: bool = False
     ) -> Tuple[AdapterResponse, agate.Table]:
         """Execute the given SQL.
 
